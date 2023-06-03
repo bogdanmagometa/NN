@@ -2,7 +2,7 @@ import random
 from typing import List
 
 from nn.module import Linear, SoftmaxActivation
-from nn.nn import Value
+from nn.value import Value
 
 class Perceptron:
     def __init__(self, no_weights: int):

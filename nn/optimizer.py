@@ -11,7 +11,7 @@ class Optimizer(ABC):
     def step(self):
         pass
 
-class NaiveGradientDescentOptimizer(Optimizer):
+class VanillaGradientDescentOptimizer(Optimizer):
     def __init__(self, params, lr=0.01, weight_decay=0):
         self._parameters = params
         self._lr = lr
@@ -29,6 +29,7 @@ class NaiveGradientDescentOptimizer(Optimizer):
 
 class MomentumOptimizer(Optimizer):
     """As described here: https://www.youtube.com/watch?v=k8fTYJPd3_I
+    But with bias correction
     """
     def __init__(self, params, lr=0.01, beta=0.9, weight_decay=0):
         self._parameters = params
@@ -38,19 +39,23 @@ class MomentumOptimizer(Optimizer):
 
         self._momentum = np.zeros(len(params))
 
+        self._cur_iteration = 1
+
     def step(self):
         gradient = np.array([param.grad for param in self._parameters])
         if self._weight_decay != 0:
             gradient += self._weight_decay * np.array([param.data for param in self._parameters])
 
         self._momentum = self._beta * self._momentum + (1 - self._beta) * gradient
+        
+        corrected_momentum = self._momentum / (1 - self._beta**self._cur_iteration)
 
-        delta_parameters = - self._lr * self._momentum
+        delta_parameters = - self._lr * corrected_momentum
 
         for param_idx, param in enumerate(self._parameters):
             param.data += delta_parameters[param_idx]
 
-
+        self._cur_iteration += 1
 
 class RMSPropOptimizer(Optimizer):
     def __init__(self, params, lr=0.01, alpha=0.99, eps=1e-8, weight_decay=0):
