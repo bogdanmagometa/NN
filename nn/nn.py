@@ -88,10 +88,10 @@ class Value:
     def __neg__(self):
         return self * (-1)
 
-    def __div__(self, other: Union['Value', float]):
+    def __truediv__(self, other: Union['Value', float]):
         return self * other**(-1)
 
-    def __rdiv__(self, other: float):
+    def __rtruediv__(self, other: float):
         return other * self**(-1)
 
     def sigmoid(self) -> 'Value':
@@ -101,6 +101,19 @@ class Value:
         def backward():
             # this should be called when gradient w.r.t. out is already calculated
             local_gradient = out.data * (1 - out.data)
+            self.grad += local_gradient * out.grad
+
+        out._backward = backward
+
+        return out
+
+    def relu(self) -> 'Value':
+        out = Value(np.max(self.data, 0))
+        out._children = [self]
+
+        def backward():
+            # this should be called when gradient w.r.t. out is already calculated
+            local_gradient = float(self.data > 0)
             self.grad += local_gradient * out.grad
 
         out._backward = backward
@@ -151,8 +164,7 @@ class Value:
                     visited.add(cur_value)
                     frontier.append(child)
 
-    @staticmethod
-    def back_prop(value: 'Value') -> None:
+    def back_prop(self) -> None:
         """Calculate and set the gradients of value and of its "descendants".
 
         Parameters
@@ -160,8 +172,8 @@ class Value:
         value: Value
         """
 
-        value.grad = 1
-        for val in reversed(Value._toposort(value)):
+        self.grad = 1
+        for val in reversed(Value._toposort(self)):
             val._backward()
 
     @staticmethod

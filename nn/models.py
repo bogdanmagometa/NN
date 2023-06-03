@@ -1,18 +1,10 @@
 import random
 from typing import List
-from abc import ABC, abstractmethod
 
-from .nn import Value
+from nn.module import Linear, SoftmaxActivation
+from nn.nn import Value
 
-class Model(ABC):
-    @abstractmethod
-    def __call__(self, X: List[List[float]]):
-        raise NotImplemented
-    @abstractmethod
-    def parameters(self):
-        raise NotImplemented
-
-class Perceptron(Model):
+class Perceptron:
     def __init__(self, no_weights: int):
         assert no_weights > 0, "Number of weights should be greater than 0"
         self._weights = [Value(random.random() * 2 - 1) for _ in range(no_weights)]
@@ -26,3 +18,4 @@ class Perceptron(Model):
 
     def parameters(self):
         return [self._bias] + self._weights
+
