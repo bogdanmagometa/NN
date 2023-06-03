@@ -11,6 +11,46 @@ class Optimizer(ABC):
     def step(self):
         pass
 
+class NaiveGradientDescentOptimizer(Optimizer):
+    def __init__(self, params, lr=0.01, weight_decay=0):
+        self._parameters = params
+        self._lr = lr
+        self._weight_decay = weight_decay
+
+    def step(self):
+        gradient = np.array([param.grad for param in self._parameters])
+        if self._weight_decay != 0:
+            gradient += self._weight_decay * np.array([param.data for param in self._parameters])
+
+        delta_parameters = - self._lr * gradient
+
+        for param_idx, param in enumerate(self._parameters):
+            param.data += delta_parameters[param_idx]
+
+class MomentumOptimizer(Optimizer):
+    """As described here: https://www.youtube.com/watch?v=k8fTYJPd3_I
+    """
+    def __init__(self, params, lr=0.01, beta=0.9, weight_decay=0):
+        self._parameters = params
+        self._lr = lr
+        self._beta = beta
+        self._weight_decay = weight_decay
+
+        self._momentum = np.zeros(len(params))
+
+    def step(self):
+        gradient = np.array([param.grad for param in self._parameters])
+        if self._weight_decay != 0:
+            gradient += self._weight_decay * np.array([param.data for param in self._parameters])
+
+        self._momentum = self._beta * self._momentum + (1 - self._beta) * gradient
+
+        delta_parameters = - self._lr * self._momentum
+
+        for param_idx, param in enumerate(self._parameters):
+            param.data += delta_parameters[param_idx]
+
+
 
 class RMSPropOptimizer(Optimizer):
     def __init__(self, params, lr=0.01, alpha=0.99, eps=1e-8, weight_decay=0):
