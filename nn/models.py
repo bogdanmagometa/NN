@@ -15,7 +15,7 @@ class Model(ABC):
 class Perceptron(Model):
     def __init__(self, no_weights: int):
         assert no_weights > 0, "Number of weights should be greater than 0"
-        self._weights = [Value(random.random() * 2 - 1)]
+        self._weights = [Value(random.random() * 2 - 1) for _ in range(no_weights)]
         self._bias = Value(random.random() * 2 - 1)
 
     def __call__(self, x: List[float]) -> Value:
