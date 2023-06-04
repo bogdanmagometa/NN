@@ -166,10 +166,6 @@ class Value:
 
     def back_prop(self) -> None:
         """Calculate and set the gradients of value and of its "descendants".
-
-        Parameters
-        ----------
-        value: Value
         """
 
         self.grad = 1
