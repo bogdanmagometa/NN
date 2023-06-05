@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
-from .value import Value
+from .tensor import Tensor
 
 class Module(ABC):
     @abstractmethod
@@ -17,30 +17,35 @@ class Module(ABC):
 class Linear(Module):
     def __init__(self, num_inputs, num_outputs):
         assert num_inputs > 0 and num_outputs > 0
-        self._weights = [[Value(random.random() * 2 - 1) for _ in range(num_inputs)] for _ in range(num_outputs)]
-        self._biases = [Value(random.random() * 2 - 1) for _ in range(num_outputs)]
+        self._num_outputs = num_outputs
+        self._weights = Tensor(np.random.randn(num_inputs, num_outputs))
+        self._biases = Tensor(np.random.randn(num_outputs))
 
-    def __call__(self, x: List[Value]):
-        logits = self._biases.copy()
-        for out_idx, out_weights in enumerate(self._weights):
-            for in_idx, weight in enumerate(out_weights):
-                logits[out_idx] += weight * x[in_idx]
+    def __call__(self, X: Tensor):
+        logits = X.tensordot(self._weights, 1)
+        logits_shape = np.shape(logits.data)
+        logits = logits + self._biases.reshape((1, logits_shape[1])).broadcast_to(logits_shape)
         return logits
 
     def parameters(self):
-        return self._biases + sum(self._weights, [])
+        return [self._biases, self._weights]
 
 class SoftmaxActivation(Module):
     def __init__(self, num_nodes: int):
         assert num_nodes > 0
         self._num_nodes = num_nodes
 
-    def __call__(self, x: List[Value]):
-        exponentiated = [np.e**regressor for regressor in x]
-        denom = exponentiated[0]
-        for i in range(1, self._num_nodes):
-            denom = denom + exponentiated[i]
-        return [activation / denom for activation in exponentiated]
+    def __call__(self, X: Tensor):
+        exponentiated = np.e**X
+        denom = exponentiated.sum(1)
+
+        X_shape = np.shape(X.data)
+
+        denom = denom.reshape((X_shape[0], 1)).broadcast_to(X_shape)
+
+        activations = exponentiated / denom
+
+        return activations
 
     def parameters(self):
         return []
@@ -50,8 +55,8 @@ class ReLUActivation(Module):
         assert num_nodes > 0
         self._num_nodes = num_nodes
 
-    def __call__(self, x: List[Value]):
-        return [x_i.relu() for x_i in x]
+    def __call__(self, X: Tensor):
+        return X.relu()
 
     def parameters(self):
         return []
@@ -61,8 +66,8 @@ class SigmoidActivation(Module):
         assert num_nodes > 0
         self._num_nodes = num_nodes
 
-    def __call__(self, x: List[Value]):
-        return [x_i.sigmoid() for x_i in x]
+    def __call__(self, X: Tensor):
+        return X.sigmoid()
 
     def parameters(self):
         return []

@@ -2,8 +2,8 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
-
 class Optimizer(ABC):
+    obj_sqrt = np.vectorize(lambda x: np.sqrt(x))
     def zero_grad(self):
         for parameter in self._parameters:
             parameter.grad = 0
@@ -78,7 +78,7 @@ class RMSPropOptimizer(Optimizer):
 
         corrected_second_moment = self._second_moment / (1 - self._alpha**self._cur_iteration)
 
-        delta_parameters = - self._lr * gradient / (np.sqrt(corrected_second_moment) + self._eps)
+        delta_parameters = - self._lr * gradient / (np.array([np.sqrt(arr) for arr in corrected_second_moment]) + self._eps)
 
         for param_idx, param in enumerate(self._parameters):
             param.data += delta_parameters[param_idx]
@@ -109,7 +109,7 @@ class AdamOptimizer(Optimizer):
         corrected_moment = self._moment / (1 - self._betas[0]**self._cur_iteration)
         corrected_second_moment = self._second_moment / (1 - self._betas[1]**self._cur_iteration)
 
-        delta_parameters = - self._lr * corrected_moment / (np.sqrt(corrected_second_moment) + self._eps)
+        delta_parameters = - self._lr * corrected_moment / (np.array([np.sqrt(arr) for arr in corrected_second_moment]) + self._eps)
 
         for param_idx, param in enumerate(self._parameters):
             param.data += delta_parameters[param_idx]
