@@ -76,9 +76,10 @@ class RMSPropOptimizer(Optimizer):
 
         self._second_moment = self._alpha * self._second_moment + (1 - self._alpha) * gradient**2
 
-        corrected_second_moment = self._second_moment / (1 - self._alpha**self._cur_iteration)
+        # This is not what PyTorch does, so we comment this
+        # corrected_second_moment = self._second_moment / (1 - self._alpha**self._cur_iteration)
 
-        delta_parameters = - self._lr * gradient / (np.array([np.sqrt(arr) for arr in corrected_second_moment]) + self._eps)
+        delta_parameters = - self._lr * gradient / (np.array([np.sqrt(arr) for arr in self._second_moment]) + self._eps)
 
         for param_idx, param in enumerate(self._parameters):
             param.data += delta_parameters[param_idx]
