@@ -204,7 +204,7 @@ class TensorTestCase(unittest.TestCase):
         self.assertTrue(np.allclose(h.grad, [[[[1], [2]]], 
                                              [[[3], [4]]]]))
 
-    def test_tensordot(self):
+    def test_tensordot2(self):
         W = Tensor(np.array([[1, 2], 
                              [3, 4]], dtype=np.float64))
         h = Tensor(np.array([5, 6], dtype=np.float64))
